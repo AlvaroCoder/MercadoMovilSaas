@@ -1,12 +1,22 @@
-const BASE_URL = "http://localhost:8080/product/"
+'use server'
+const BASE_URL = process.env.BASE_URL_PRODUCT
+
 export async function fetchProductStandard() {
     return fetch(BASE_URL,{
         method:'GET',
         mode:'cors'
     });
 }
-export async function fetchDataCategories() {
-    const dataCategories= await fetch(BASE_URL+"categories",{
+export async function fetchTypeStore() {
+    const dataTypeStore =await fetch(BASE_URL+"typestore",{
+        method : 'GET',
+        mode:'cors'
+    });
+    const jsonDataTypeStore = await dataTypeStore.json();
+    return jsonDataTypeStore;
+}
+export async function fetchDataCategories(idTypeStore) {
+    const dataCategories= await fetch(BASE_URL+`categories/?idTypeStore=${idTypeStore}`,{
         method : 'GET',
         mode :'cors'
     });
@@ -57,4 +67,28 @@ export async function fetchDataSubFamily(idCategorie, idSubCategorie, idClass, i
     });
     const jsonDataSubFamily = await dataSubFamily.json();
     return jsonDataSubFamily;
+}
+
+export async function fetchDataPresentation(idSubCategorie) {
+    const dataPresentation = await fetch(BASE_URL+`presentation/?idSubCategorie=${idSubCategorie}`,{
+        method : 'GET',
+        mode : 'cors'
+    });
+    const jsonDataPresentation = await dataPresentation.json();
+    return jsonDataPresentation;
+}
+export async function fetchDataBrand(idCategorie) {
+    const dataBrand = await fetch(BASE_URL+`brand/?idCategorie=${idCategorie}`,{
+        method : 'GET',
+        mode:'cors'
+    });
+    const jsonDataBrand = await dataBrand.json();
+    return jsonDataBrand;
+}
+export async function fetchSaveDataProduct(dataProduct) {
+    return await fetch(BASE_URL,{
+        method : 'POST',
+        mode :'cors',
+        body : JSON.stringify(dataProduct)
+    });
 }

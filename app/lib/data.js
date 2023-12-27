@@ -1,5 +1,4 @@
-const BASE_URL = "http://localhost:8080/admin/"
-import {unstable_cache as noStore} from 'next/cache';
+const BASE_URL = process.env.BASE_URL_ADMIN
 export async function fetchUsers() {
     try {
         const fetchCountUsers = fetch(BASE_URL+"countUsers",{

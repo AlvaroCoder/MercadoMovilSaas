@@ -1,5 +1,5 @@
 'use client';
-import { fetchDataCategories, fetchDataClass, fetchDataFamily, fetchDataSubClass, fetchDataSubFamily, fetchDataSubcategories } from '@/app/lib/products';
+import { fetchDataBrand, fetchDataCategories, fetchDataClass, fetchDataFamily, fetchDataPresentation, fetchDataSubClass, fetchDataSubFamily, fetchDataSubcategories, fetchSaveDataProduct, fetchTypeStore } from '@/app/lib/products';
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
 const contextDopDownBox = createContext({
@@ -9,14 +9,23 @@ const contextDopDownBox = createContext({
     idSubClass : 0,
     idFamily : 0,
     idSubFamily : 0,
+    dataText : {
+        nameProduct : '',
+        descriptionProduct : ''
+    },
     changeIdValue : (idValue, type)=>{},
+    handleChangeText :(event)=>{},
+    saveDataProduct : async(urlImage)=>{},
     dataset : {
+        typestore : [],
         categorie : [],
         subcategorie : [],
         class : [],
         subclass : [],
         family : [],
-        subfamily : []
+        subfamily : [],
+        presentation : [],
+        brand : []
     }
 })
 
@@ -26,31 +35,60 @@ export function useDropDownContext() {
 
 export default function DropDownContainer({children}) {
     const [dataset, setDataset] = useState({
+        typestore : [],
         categorie : [],
         subcategorie : [],
         class : [],
         subclass : [],
         family : [],
-        subfamily : []
+        subfamily : [],
+        presentation : [],
+        brand : []
     });
+    const [dataIdTypeStore, setDataIdTypeStore] = useState(1);
     const [dataIdCategorie, setDataIdCategorie] = useState(1);
     const [dataIdSubcategorie, setDataIdSubcategorie] = useState(1);
     const [dataIdClass, setDataIdClass] = useState(1);
     const [dataIdSubClass, setDataIdSubClass] = useState(1);
     const [dataIdFamily, setDataIdFamily] = useState(1);
-    const [dataIdSubFamily, setDataIdSubFamily] = useState(1)
+    const [dataIdSubFamily, setDataIdSubFamily] = useState(1);
+    const [dataIdPresentation, setDataIdPresentation] = useState(1);
+    const [dataIdBrand, setDataIdBrand] = useState(1);
+    const [dataText, setDataText] = useState({
+        nameProduct : '',
+        descriptionProduct : ''
+    })
     useEffect(()=>{
-        async function fetchDataxCategorie() {
-            const dataCategories = await fetchDataCategories();
+        async function fetchData() {
+            const dataServer = await fetchTypeStore();
             setDataset(prev=>({
                 ...prev,
-                categorie : dataCategories.message
+                typestore : dataServer.message
             }));
         }
-        fetchDataxCategorie();
+        fetchData();
     },[]);
 
+    const handleChangeText =(event)=>{
+        event.preventDefault();
+        const target = event.target;
+        setDataText(prev=>({
+            ...prev,
+            [target.name] : target.value
+        }));
+    }
+
     const changeIdValue=(idValue, type)=>{
+        if (type=="typestore") {
+            (async()=>{
+                const dataCategorie = await fetchDataCategories(idValue);
+                setDataset(prev=>({
+                    ...prev,
+                    categorie : dataCategorie.message
+                }))
+            })();
+            setDataIdTypeStore(Number(idValue));
+        }
         if (type=="categorie") {
             (async()=>{
                 const dataSubCategorie = await fetchDataSubcategories(idValue);
@@ -107,14 +145,54 @@ export default function DropDownContainer({children}) {
             return;
         }
         if (type=="subfamily") {
+            (async ()=>{
+                const dataPresentation = await fetchDataPresentation(dataIdSubcategorie);
+                setDataset(prev=>({
+                    ...prev,
+                    presentation : dataPresentation.message
+                }));
+            })();
             setDataIdSubFamily(idValue);
             return;
         }
-        
+        if (type=="presentation") {
+            (async ()=>{
+                const dataBrand = await fetchDataBrand(dataIdCategorie);
+                setDataset(prev=>({
+                    ...prev,
+                    brand : dataBrand.message
+                }));
+            })();
+            setDataIdPresentation(idValue);
+            return;
+        }
+        if (type=="brand") {
+            setDataIdBrand(idValue);
+            return;
+        }
+    }
+
+    const saveDataProduct=async(urlImage)=>{
+        const dataToSendBackend = {
+            dataIdTypeStore,
+            dataIdCategorie,
+            dataIdSubcategorie,
+            dataIdClass,
+            dataIdSubClass,
+            dataIdFamily,
+            dataIdSubFamily,
+            dataIdPresentation,
+            dataIdBrand,
+            nameProduct : dataText.nameProduct,
+            descriptionProduct : dataText.descriptionProduct,
+            urlImage
+        }
+        const response = await fetchSaveDataProduct(dataToSendBackend);
+        return response;
     }
     
     return (
-        <contextDopDownBox.Provider value={{dataset,idCategorie:dataIdCategorie,changeIdValue}}>
+        <contextDopDownBox.Provider value={{saveDataProduct,dataText, handleChangeText, dataset, idCategorie:dataIdCategorie, changeIdValue}}>
             {children}
         </contextDopDownBox.Provider>
     )
